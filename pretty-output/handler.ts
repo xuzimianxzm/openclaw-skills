@@ -1,7 +1,6 @@
 ﻿// 消息格式化钩子的处理函数
 const messageFormatterHandler = async (event: any) => {
     // 只处理消息发送事件
-    console.log(`[message-formatter] event type:` + event.type + ` event action:` + event.action);
     if (event.type !== "message" || event.action !== "preprocessed") {
         console.log(`[message-formatter] 不需要格式化消息`);
         return;
@@ -88,7 +87,7 @@ const messageFormatterHandler = async (event: any) => {
     // ========== 应用格式化结果 ==========
 
     // 修改消息内容（这是关键！）
-    event.context.content = "[xzm test hooks]" + content;
+    event.context.content =  content;
 
     // 可选：向会话中添加一条调试消息（用户不可见，仅开发者可见）
     // event.messages.push(`[格式化完成] ${content.length} 字符`);
