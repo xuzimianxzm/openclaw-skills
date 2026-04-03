@@ -105,18 +105,21 @@ function processMarkdownContent(content: string): string {
  * 检测是否为 YAML
  */
 function isYAML(content: string): boolean {
-    try {
-        // 简单检测：包含键值对格式
-        const yamlPattern = /^\s*\w+\s*:\s*\S+/m;
-        return yamlPattern.test(content);
-    } catch {
-        return false;
-    }
-}
-
-/**
- * 检测是否为 JSON
- */
+    // 更准确的 YAML 检测：检查 YAML 特征
+    const yamlPatterns = [
+        /^\s*\w+\s*:\s*\S+/m,        // key: value
+        /^\s*-\s+\S+/m,              // - item
+        /^\s*\w+\s*:\s*\n\s*-/m,     // key:\n  - item
+        /^\s*\w+\s*:\s*\n\s*\w+/m   // key:\n  value
+    ];
+    
+    // 检查是否有 YAML 特征
+    const hasYamlFeatures = yamlPatterns.some(pattern => pattern.test(content));
+    
+    // 检查是否有明显的非 YAML 内容
+    const hasNonYamlContent = /\b(if|for|while|function|class|import|export)\b/.test(content);
+    
+    return hasYamlFeatures && !hasNonYamlContent;
 function isJSON(content: string): boolean {
     try {
         JSON.parse(content);
