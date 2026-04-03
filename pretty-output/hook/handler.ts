@@ -122,13 +122,18 @@ function isJSON(content: string): boolean {
         JSON.parse(content);
         return true;
     } catch {
+        // 检查代码块内是否包含 JSON
+        const codeBlockMatch = content.match(/`\`\`json\\n([\s\S]*?)`\`\`/);
+        if (codeBlockMatch) {
+            try {
+                JSON.parse(codeBlockMatch[1]);
+                return true;
+            } catch {
+                return false;
+            }
+        }
         return false;
     }
-}
-
-/**
- * 检测是否为 Shell 脚本
- */
 function isShell(content: string): boolean {
     const shellKeywords = ['#!/bin/bash', '#!/bin/sh', 'if [', 'for ', 'while ', 'echo ', 'export ', 'source '];
     return shellKeywords.some(keyword => content.includes(keyword));
