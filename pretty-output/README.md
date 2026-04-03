@@ -117,32 +117,28 @@ database:
 
 ```
 pretty-output/
-├── SKILL.md           # 技能说明
-├── README.md          # 使用说明（本文件）
-├── _meta.json         # 元数据
-└── pretty_output.py   # 核心代码
+├── SKILL.md              # 技能说明
+├── README.md             # 使用说明（本文件）
+├── _meta.json            # 元数据
+├── requirements.txt      # Python 依赖（仅用于开发测试）
+├── install.js            # 自动安装脚本
+└── hook/
+    ├── HOOK.md           # Hook 使用说明
+    └── handler.ts        # 核心处理代码（TypeScript）
 ```
 
-## 核心类
+## 核心功能
 
-### pretty-outputProcessor
+### handler.ts
 
-主要的回复美化处理器类。
+基于 TypeScript 的消息格式化处理器，运行在 OpenClaw Hook 环境中。
 
-#### 方法
+#### 主要函数
 
-- `__init__(channel: str)` - 初始化处理器
-- `process(content: str) -> str` - 处理回复内容
-- `detect_and_format_code(content: str) -> str` - 自动检测并格式化代码块
-
-## 测试
-
-运行测试：
-
-```bash
-cd pretty-output
-python3 pretty_output.py
-```
+- `processWeChatContent(content: string)` - 处理微信通道内容
+- `processMarkdownContent(content: string)` - 处理 Markdown 通道内容
+- `detectAndFormatCode(content: string, channel: string)` - 自动检测并格式化代码块
+- `messageFormatterHandler(event: any)` - 主处理函数
 
 ## 注意事项
 
