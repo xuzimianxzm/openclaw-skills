@@ -165,17 +165,31 @@ function isShell(content: string): boolean {
     // 至少需要 2 个 Shell 特征，且不能有非 Shell 内容
     return shellFeatureCount >= 2 && !hasNonShellContent;
 function isConfig(content: string): boolean {
+    // 更准确的配置文件检测：检查多种配置格式
     const configPatterns = [
-        /^\s*\w+\s*:\s*\w+/m,  // key: value
-        /^\s*\w+\s*=\s*\w+/m,  // key=value
-        /^\s*\[\w+\]/m,         // [section]
+        // INI 格式
+        /^\s*\[\w+\]\s*$/m,                 // [section]
+        /^\s*\w+\s*=\s*\S+/m,              // key=value
+        // YAML 格式
+        /^\s*\w+\s*:\s*\S+/m,              // key: value
+        /^\s*-\s+\S+/m,                      // - item
+        // 环境变量格式
+        /^\s*\w+_\w+\s*=\s*\S+/m,          // KEY_NAME=value
+        /^\s*\w+\s*=\s*["'].*["']\s*$/m,   // key="value"
+        // JSON 格式
+        /^\s*\{\s*"[\w_]+"\s*:/m,           // {"key":
+        // Properties 格式
+        /^\s*[\w.]+\s*=\s*\S+/m            // key=value 或 key.subkey=value
     ];
-    return configPatterns.some(pattern => pattern.test(content));
-}
-
-/**
- * 格式化 JSON
- */
+    
+    // 检查是否有足够的配置文件特征
+    const configFeatureCount = configPatterns.filter(pattern => pattern.test(content)).length;
+    
+    // 检查是否有明显的非配置内容
+    const hasNonConfigContent = /(function|class|import|export|if\s*\(|for\s*\(|while\s*\()\b/.test(content);
+    
+    // 至少需要 2 个配置特征，且不能有非配置内容
+    return configFeatureCount >= 2 && !hasNonConfigContent;
 function formatJSON(content: string): string {
     try {
         const data = JSON.parse(content);
