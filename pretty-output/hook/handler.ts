@@ -138,13 +138,32 @@ function isJSON(content: string): boolean {
         return false;
     }
 function isShell(content: string): boolean {
-    const shellKeywords = ['#!/bin/bash', '#!/bin/sh', 'if [', 'for ', 'while ', 'echo ', 'export ', 'source '];
-    return shellKeywords.some(keyword => content.includes(keyword));
-}
-
-/**
- * 检测是否为配置文件
- */
+    // 更准确的 Shell 检测：检查多个特征
+    const shellPatterns = [
+        /^#!/bin\/(bash|sh|zsh)/m,          // Shebang 行
+        /^\s*if\s+\[/m,                     // if 语句
+        /^\s*for\s+\w+\s+in\s+/m,          // for 循环
+        /^\s*while\s+\[/m,                  // while 循环
+        /^\s*echo\s+/m,                     // echo 命令
+        /^\s*export\s+/m,                   // export 命令
+        /^\s*source\s+/m,                   // source 命令
+        /^\s*\$\w+/m,                      // 变量引用
+        /^\s*\$\{\w+\}/m,                 // 变量引用
+        /^\s*\|\s+/m,                      // 管道
+        /^\s*\&\&\s+/m,                   // 逻辑与
+        /^\s*\|\|\s+/m,                   // 逻辑或
+        /^\s*\(\s*/m,                      // 命令替换
+        /^\s*\)\s*$/m                      // 命令替换结束
+    ];
+    
+    // 检查是否有足够的 Shell 特征
+    const shellFeatureCount = shellPatterns.filter(pattern => pattern.test(content)).length;
+    
+    // 检查是否有明显的非 Shell 内容
+    const hasNonShellContent = /(function|class|import|export|const|let|var|=>|\{\})\b/.test(content);
+    
+    // 至少需要 2 个 Shell 特征，且不能有非 Shell 内容
+    return shellFeatureCount >= 2 && !hasNonShellContent;
 function isConfig(content: string): boolean {
     const configPatterns = [
         /^\s*\w+\s*:\s*\w+/m,  // key: value
