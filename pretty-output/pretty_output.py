@@ -226,7 +226,7 @@ class PrettyOutputProcessor:
         except:
             return content
     
-    def _format_json(self, content: str) -> bool:
+    def _format_json(self, content: str) -> str:
         """格式化 JSON"""
         try:
             data = json.loads(content)
