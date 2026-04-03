@@ -1,22 +1,6 @@
 ---
 name: pretty-output
-slug: pretty-output
-version: 1.1.0
-description: >
-  【Hook 回复后处理器】基于 OpenClaw Hook 机制自动美化 AI 输出：
-  - 长文本分段、加列表、加标题
-  - 代码/配置/JSON/YAML/Shell 自动包裹代码块
-  - 按通道适配：飞书完整 Markdown / 微信降级友好
-  - 修复换行、缩进、挤成一团问题
-  - 全程自动触发，无需用户指令
-author: 徐自勉
-license: MIT
-# 关键：设为 post-processor，自动处理所有回复
-metadata:
-  openclaw:
-    type: post-processor  # 核心：后处理器（自动拦截所有AI回复）
-    priority: 9999        # 最高优先级，确保最后执行
-    channels: [feishu, wechat, lark, dingtalk]
+description: 基于 OpenClaw Hook 机制自动美化 AI 输出，包括长文本分段、列表标题、代码块包装、通道适配（飞书 Markdown/微信纯文本）、修复换行缩进问题，全程自动触发无需指令。
 ---
 
 # 智能回复美化处理器
@@ -224,8 +208,6 @@ database:
 ```
 pretty-output/
 ├── SKILL.md              # 技能说明（本文件）
-├── README.md             # 使用说明
-├── _meta.json            # 元数据
 ├── install.js            # 自动安装脚本
 └── hook/
     ├── HOOK.md           # Hook 使用说明
@@ -254,3 +236,4 @@ pretty-output/
 
 - **1.1.0** (2026-04-04): 添加 Hook 机制说明，更新安装指南
 - **1.0.0** (2026-04-03): 初始版本，基于 Python 实现
+```

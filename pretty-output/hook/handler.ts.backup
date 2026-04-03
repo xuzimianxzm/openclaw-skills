@@ -269,15 +269,9 @@ const messageFormatterHandler = async (event: any) => {
     };
 
     for (const [keyword, replacement] of Object.entries(emojiMap)) {
-        try {
-            // 使用词边界确保只匹配完整的单词，避免误匹配（如"错误信息"不会被匹配）
-            // 使用负向预查确保不会重复替换已带 emoji 的内容
-            const regex = new RegExp(f'(?<![❌✅⚠📌🔴💡📋📝📊])\b{keyword}\b(?!\w)', 'g');
-            if (regex.test(content)) {
-                content = content.replace(regex, replacement);
-            }
-        } catch (error) {
-            print(f'[message-formatter] emoji 替换失败: {keyword}')
+        // 避免重复添加表情符号
+        if (content.includes(keyword) && !content.includes(replacement)) {
+            content = content.replace(new RegExp(keyword, 'g'), replacement);
         }
     }
 
