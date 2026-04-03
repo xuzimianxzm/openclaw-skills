@@ -9,7 +9,7 @@ description: >
   - 按通道适配：飞书完整 Markdown / 微信降级友好
   - 修复换行、缩进、挤成一团问题
   - 全程自动触发，无需用户指令
-author: your-name
+author: 徐自勉
 license: MIT
 # 关键：设为 post-processor，自动处理所有回复
 metadata:
@@ -72,7 +72,7 @@ server:
   ```
 
 
-## 三、配置启用（必做）
+## 配置启用（必做）
 编辑 `~/.openclaw/config.yaml`
 ```yaml
 agents:
@@ -88,4 +88,10 @@ channels:
     enabled: true
     markdown: false
     compact: true
+  lark:
+    enabled: true
+    markdown: true
+  dingtalk:
+    enabled: true
+    markdown: true
 ```
