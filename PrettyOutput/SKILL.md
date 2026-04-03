@@ -1,6 +1,6 @@
 ﻿---
-name: Pretty Output
-slug: Pretty Output
+name: pretty-output
+slug: pretty-output
 version: 1.0.0
 description: >
   【回复后处理器】自动美化 OpenClaw 所有输出：
@@ -78,7 +78,7 @@ server:
 agents:
   defaults:
     postSkills:
-      - auto-response-beautifier
+      - pretty-output
 
 channels:
   feishu:
