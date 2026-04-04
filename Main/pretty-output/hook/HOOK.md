@@ -1,4 +1,4 @@
-﻿---
+---
 name: message-formatter
 description: "在发送消息前自动格式化输出内容，添加表情符号、美化列表和代码块"
 homepage: https://docs.openclaw.ai/automation/hooks
