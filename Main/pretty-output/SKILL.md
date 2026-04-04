@@ -100,11 +100,6 @@ cp -r pretty-output ~/.openclaw/workspace/skills/
 编辑 `~/.openclaw/config.yaml`，添加以下配置：
 
 ```yaml
-agents:
-  defaults:
-    postSkills:
-      - pretty-output
-
 channels:
   feishu:
     enabled: true
@@ -175,13 +170,11 @@ openclaw gateway restart
 ## 格式化示例
 
 ### 原始 AI 输出
-```yaml
 server:
   port: 8080
   host: 0.0.0.0
 database:
   url: mongodb://localhost:27017/db
-```
 
 ### 飞书 / Lark / 钉钉输出
 ```yaml
@@ -236,4 +229,3 @@ pretty-output/
 
 - **1.1.0** (2026-04-04): 添加 Hook 机制说明，更新安装指南
 - **1.0.0** (2026-04-03): 初始版本，基于 Python 实现
-```
