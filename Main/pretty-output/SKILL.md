@@ -18,7 +18,7 @@ description: 基于 OpenClaw Hook 机制自动美化 AI 输出，包括长文本
 ### 核心处理逻辑
 
 ```
-用户发送消息 → OpenClaw 处理 → AI 生成回复 → Hook 拦截 
+用户发送消息 → OpenClaw 处理 → AI 生成回复 → Hook 拦截
 → 判断通道类型 → 应用对应格式化规则 → 输出美化后的消息
 ```
 
@@ -96,27 +96,40 @@ node install.js
 cp -r pretty-output ~/.openclaw/workspace/skills/
 ```
 
-#### 2. 配置 OpenClaw
-编辑 `~/.openclaw/config.yaml`，添加以下配置：
+#### 2. 配置 Hook 目录
 
-```yaml
-channels:
-  feishu:
-    enabled: true
-    markdown: true
-  wechat:
-    enabled: true
-    markdown: false
-    compact: true
-  lark:
-    enabled: true
-    markdown: true
-  dingtalk:
-    enabled: true
-    markdown: true
+编辑 `~/.openclaw/openclaw.json`，添加以下配置：
+
+```json
+{
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "load": {
+        "extraDirs": [
+          "~/.openclaw/workspace/skills/pretty-output/hook"
+        ]
+      }
+    }
+  }
+}
 ```
 
-#### 3. 重启 OpenClaw
+**注意**：如果 `openclaw.json` 中已有 `hooks` 配置，只需将 hook 目录路径添加到 `hooks.internal.load.extraDirs` 数组中。
+
+#### 3. 启用 Hook
+```bash
+openclaw hooks enable message-formatter
+```
+
+#### 4. 验证安装
+```bash
+openclaw hooks list
+```
+
+应该能看到 `message-formatter` 在列表中。
+
+#### 5. 重启 OpenClaw
 ```bash
 openclaw gateway restart
 ```
@@ -170,11 +183,13 @@ openclaw gateway restart
 ## 格式化示例
 
 ### 原始 AI 输出
+```yaml
 server:
   port: 8080
   host: 0.0.0.0
 database:
   url: mongodb://localhost:27017/db
+```
 
 ### 飞书 / Lark / 钉钉输出
 ```yaml
