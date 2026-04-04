@@ -4,8 +4,8 @@
  * 消息格式化器安装脚本
  * 
  * 功能：
- * 1. 自动配置 OpenClaw 的 hook 目录
- * 2. 启用 message-formatter hook
+ * 1. 自动配置 OpenClaw 的 message-formatter 目录
+ * 2. 启用 message-formatter message-formatter
  * 3. 提示用户重启 Gateway
  */
 
@@ -15,7 +15,7 @@ const os = require('os');
 
 // 配置路径
 const CONFIG_PATH = path.join(os.homedir(), '.openclaw', 'openclaw.json');
-const HOOK_DIR = path.join(__dirname, 'hook');
+const HOOK_DIR = __dirname;
 
 // 颜色输出
 const colors = {
@@ -100,7 +100,7 @@ function updateConfig() {
     extraDirs = [];
   }
   
-  // 检查是否已配置 hook 目录
+  // 检查是否已配置 message-formatter 目录
   const hookDirPath = path.resolve(HOOK_DIR);
   const alreadyConfigured = extraDirs.some(dir => {
     const resolved = path.resolve(dir);
@@ -112,7 +112,7 @@ function updateConfig() {
     return true;
   }
   
-  // 添加 hook 目录
+  // 添加 message-formatter 目录
   extraDirs.push(HOOK_DIR);
   config.hooks.internal.load.extraDirs = extraDirs;
   
@@ -132,7 +132,7 @@ function enableHook() {
   const { execSync } = require('child_process');
   
   try {
-    logInfo('正在启用 message-formatter hook...');
+    logInfo('正在启用 message-formatter message-formatter...');
     execSync('openclaw hooks enable message-formatter', { 
       stdio: 'inherit',
       cwd: os.homedir()
@@ -140,7 +140,7 @@ function enableHook() {
     logSuccess('Hook 已启用');
     return true;
   } catch (error) {
-    // 如果 hook 不在发现列表中，尝试列出所有可用的 hook
+    // 如果 message-formatter 不在发现列表中，尝试列出所有可用的 message-formatter
     logWarning('自动启用失败，尝试列出可用的 hooks...');
     try {
       execSync('openclaw hooks list', { 
@@ -161,22 +161,22 @@ function main() {
   log('=' .repeat(40), 'cyan');
   log('');
   
-  // 1. 检查 hook 目录是否存在
+  // 1. 检查 message-formatter 目录是否存在
   if (!fs.existsSync(HOOK_DIR)) {
     logError(`Hook 目录不存在: ${HOOK_DIR}`);
     process.exit(1);
   }
   
   // 2. 更新配置文件
-  log('步骤 1: 配置 hook 目录...');
+  log('步骤 1: 配置 message-formatter 目录...');
   if (!updateConfig()) {
     logError('配置失败');
     process.exit(1);
   }
   log('');
   
-  // 3. 启用 hook
-  log('步骤 2: 启用 hook...');
+  // 3. 启用 message-formatter
+  log('步骤 2: 启用 message-formatter...');
   enableHook();
   log('');
   

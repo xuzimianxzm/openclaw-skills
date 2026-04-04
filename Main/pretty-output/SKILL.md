@@ -107,7 +107,7 @@ cp -r pretty-output ~/.openclaw/workspace/skills/
       "enabled": true,
       "load": {
         "extraDirs": [
-          "~/.openclaw/workspace/skills/pretty-output/hook"
+          "~/.openclaw/workspace/skills/pretty-output"
         ]
       }
     }

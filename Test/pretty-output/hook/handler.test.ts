@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import messageFormatterHandler from '../../../Main/pretty-output/hook/handler';
+import messageFormatterHandler from '../../../Main/pretty-output/message-formatter/handler';
 import {
     processWeChatContent,
     processMarkdownContent,
@@ -18,7 +18,7 @@ import {
     addLongTextSeparator,
     addSignature,
     isValidChannel
-} from '../../../Main/pretty-output/hook/handler';
+} from '../../../Main/pretty-output/message-formatter/handler';
 
 describe('pretty-output handler', () => {
 
