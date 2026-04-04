@@ -1,8 +1,7 @@
 {
-  "name": "pretty-output",
+  "name": "pretty-output-test",
   "version": "1.0.0",
   "description": "基于 OpenClaw Hook 机制自动美化 AI 输出",
-  "main": "hook/handler.ts",
   "scripts": {
     "test": "vitest",
     "test:watch": "vitest --watch",
@@ -10,14 +9,7 @@
     "build": "tsc",
     "dev": "tsc --watch"
   },
-  "keywords": [
-    "openclaw",
-    "hook",
-    "formatter",
-    "message"
-  ],
   "author": "徐自勉",
-  "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.19.39",
     "typescript": "^5.9.3",

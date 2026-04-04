@@ -17,7 +17,7 @@ import {
     addLongTextSeparator,
     addSignature,
     isValidChannel
-} from './handler';
+} from '../../../Main/pretty-output/hook/handler';
 
 describe('pretty-output handler', () => {
 
