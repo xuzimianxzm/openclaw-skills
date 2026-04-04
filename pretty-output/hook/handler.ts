@@ -1,5 +1,53 @@
 // 消息格式化钩子的处理函数
 
+// ========== 常量定义 ==========
+
+/**
+ * 支持的通道类型
+ */
+const SUPPORTED_CHANNELS = ['feishu', 'wechat', 'lark', 'dingtalk'] as const;
+
+/**
+ * Emoji 映射表
+ */
+const EMOJI_MAP: Record<string, string> = {
+    "错误": "❌ 错误",
+    "失败": "❌ 失败",
+    "成功": "✅ 成功",
+    "完成": "✅ 完成",
+    "警告": "⚠️ 警告",
+    "注意": "📌 注意",
+    "重要": "🔴 重要",
+    "建议": "💡 建议",
+    "步骤": "📋 步骤",
+    "示例": "📝 示例",
+    "总结": "📊 总结"
+};
+
+/**
+ * 列表项前缀
+ */
+const LIST_PREFIXES = ['- ', '* ', '• '] as const;
+
+/**
+ * 长文本阈值
+ */
+const LONG_TEXT_THRESHOLD = 500;
+
+/**
+ * 签名文本
+ */
+const SIGNATURE_TEXT = `\n\n---\n🤖 *OpenClaw AI 助手* | 回复 /reset 开始新对话`;
+
+// ========== 工具函数 ==========
+
+/**
+ * 验证通道类型是否有效
+ */
+function isValidChannel(channel: string): channel is typeof SUPPORTED_CHANNELS[number] {
+    return SUPPORTED_CHANNELS.includes(channel as any);
+}
+
 /**
  * 处理微信通道内容（纯文本兼容）
  * 将代码块转换为单反引号格式
@@ -112,19 +160,24 @@ function isYAML(content: string): boolean {
         /^\s*\w+\s*:\s*\n\s*-/m,     // key:\n  - item
         /^\s*\w+\s*:\s*\n\s*\w+/m   // key:\n  value
     ];
-    
+
     // 检查是否有 YAML 特征
     const hasYamlFeatures = yamlPatterns.some(pattern => pattern.test(content));
-    
+
     // 检查是否有明显的非 YAML 内容
     const hasNonYamlContent = /\b(if|for|while|function|class|import|export)\b/.test(content);
-    
+
     return hasYamlFeatures && !hasNonYamlContent;
+}
+
+/**
+ * 检测是否为 JSON
+ */
 function isJSON(content: string): boolean {
     try {
         JSON.parse(content);
         return true;
-    } catch {
+    } catch (error) {
         // 检查代码块内是否包含 JSON
         const codeBlockMatch = content.match(/`\`\`json\\n([\s\S]*?)`\`\`/);
         if (codeBlockMatch) {
@@ -137,6 +190,11 @@ function isJSON(content: string): boolean {
         }
         return false;
     }
+}
+
+/**
+ * 检测是否为 Shell 脚本
+ */
 function isShell(content: string): boolean {
     // 更准确的 Shell 检测：检查多个特征
     const shellPatterns = [
@@ -155,15 +213,20 @@ function isShell(content: string): boolean {
         /^\s*\(\s*/m,                      // 命令替换
         /^\s*\)\s*$/m                      // 命令替换结束
     ];
-    
+
     // 检查是否有足够的 Shell 特征
     const shellFeatureCount = shellPatterns.filter(pattern => pattern.test(content)).length;
-    
+
     // 检查是否有明显的非 Shell 内容
-    const hasNonShellContent = /(function|class|import|export|const|let|var|=>|\{\})\b/.test(content);
-    
+    const hasNonShellContent = /\b(function|class|import|export|const|let|var|=>|\{\})\b/.test(content);
+
     // 至少需要 2 个 Shell 特征，且不能有非 Shell 内容
     return shellFeatureCount >= 2 && !hasNonShellContent;
+}
+
+/**
+ * 检测是否为配置文件
+ */
 function isConfig(content: string): boolean {
     // 更准确的配置文件检测：检查多种配置格式
     const configPatterns = [
@@ -181,20 +244,26 @@ function isConfig(content: string): boolean {
         // Properties 格式
         /^\s*[\w.]+\s*=\s*\S+/m            // key=value 或 key.subkey=value
     ];
-    
+
     // 检查是否有足够的配置文件特征
     const configFeatureCount = configPatterns.filter(pattern => pattern.test(content)).length;
-    
+
     // 检查是否有明显的非配置内容
-    const hasNonConfigContent = /(function|class|import|export|if\s*\(|for\s*\(|while\s*\()\b/.test(content);
-    
+    const hasNonConfigContent = /\b(function|class|import|export|if\s*\(|for\s*\(|while\s*\()\b/.test(content);
+
     // 至少需要 2 个配置特征，且不能有非配置内容
     return configFeatureCount >= 2 && !hasNonConfigContent;
+}
+
+/**
+ * 格式化 JSON
+ */
 function formatJSON(content: string): string {
     try {
         const data = JSON.parse(content);
         return JSON.stringify(data, null, 2);
-    } catch {
+    } catch (error) {
+        console.warn('[message-formatter] JSON 格式化失败:', error);
         return content;
     }
 }
@@ -234,11 +303,98 @@ function detectAndFormatCode(content: string, channel: string): string {
 }
 
 /**
- * 主处理函数
+ * 添加表情符号标记
+ */
+function addEmojiMarkers(content: string): string {
+    for (const [keyword, replacement] of Object.entries(EMOJI_MAP)) {
+        try {
+            // 使用词边界确保只匹配完整的单词，避免误匹配（如"错误信息"不会被匹配）
+            // 使用负向预查确保不会重复替换已带 emoji 的内容
+            const regex = new RegExp(`(?<![❌✅⚠📌🔴💡📋📝📊])\\b${keyword}\\b(?!\w)`, 'g');
+            if (regex.test(content)) {
+                content = content.replace(regex, replacement);
+            }
+        } catch (error) {
+            console.warn(`[message-formatter] emoji 替换失败: ${keyword}`, error);
+        }
+    }
+    return content;
+}
+
+/**
+ * 美化列表格式
+ */
+function formatLists(content: string): string {
+    const lines = content.split('\n');
+    const formattedLines: string[] = [];
+    let inList = false;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const isListItem = LIST_PREFIXES.some(prefix => trimmed.startsWith(prefix));
+
+        if (isListItem) {
+            if (!inList && formattedLines.length > 0 && formattedLines[formattedLines.length - 1] !== '') {
+                formattedLines.push(''); // 列表前加空行
+            }
+            inList = true;
+            formattedLines.push(`  ${trimmed}`);
+        } else {
+            inList = false;
+            formattedLines.push(line);
+        }
+    }
+
+    return formattedLines.join('\n');
+}
+
+/**
+ * 确保代码块正确闭合
+ */
+function ensureCodeBlocksClosed(content: string): string {
+    const codeBlockCount = (content.match(/```/g) || []).length;
+    if (codeBlockCount % 2 !== 0) {
+        console.log(`[message-formatter] 补全了未闭合的代码块`);
+        return content + '\n```';
+    }
+    return content;
+}
+
+/**
+ * 添加长文本分隔线
+ */
+function addLongTextSeparator(content: string): string {
+    if (content.length > LONG_TEXT_THRESHOLD && !content.includes('---')) {
+        return `---\n${content}\n---`;
+    }
+    return content;
+}
+
+/**
+ * 添加签名
+ */
+function addSignature(content: string, channel: string): string {
+    if (channel === 'feishu' || channel === 'wechat') {
+        // 避免重复添加签名
+        if (!content.includes('🤖 OpenClaw')) {
+            return content + SIGNATURE_TEXT;
+        }
+    }
+    return content;
+}
+
+// ========== 主处理函数 ==========
+
+/**
+ * 消息格式化处理器
+ * 自动美化 AI 输出，适配不同通道格式
  */
 const messageFormatterHandler = async (event: any) => {
+    const startTime = Date.now();
+
     try {
-        // 输入验证
+        // ========== 输入验证 ==========
+
         if (!event) {
             console.warn('[message-formatter] 事件对象为空，跳过处理');
             return;
@@ -261,6 +417,7 @@ const messageFormatterHandler = async (event: any) => {
 
         // 获取原始消息内容
         let content = event.context?.content || "";
+        const originalLength = content.length;
 
         // 验证 content 是否为字符串
         if (typeof content !== 'string') {
@@ -275,106 +432,65 @@ const messageFormatterHandler = async (event: any) => {
 
         // 获取通道类型
         const channel = event.context?.channelId || "wechat";
+
+        // 验证通道类型
+        if (!isValidChannel(channel)) {
+            console.warn(`[message-formatter] 不支持的通道类型: ${channel}，使用默认处理`);
+        }
+
         console.log(`[message-formatter] 检测到通道: ${channel}`);
 
-    // 根据通道类型选择处理方式
-    if (channel === "wechat") {
-        console.log(`[message-formatter] 使用微信格式化（纯文本兼容）`);
-        content = processWeChatContent(content);
-    } else {
-        console.log(`[message-formatter] 使用 Markdown 格式化`);
-        content = processMarkdownContent(content);
-    }
+        // ========== 通道特定处理 ==========
 
-    // 代码检测和格式化
-    content = detectAndFormatCode(content, channel);
-
-    // ========== 通用格式化逻辑 ==========
-
-    // 1. 移除多余空行（保留最多2个连续换行）
-    content = content.replace(/\n{3,}/g, '\n\n');
-
-    // 2. 添加表情符号标记
-    const emojiMap: Record<string, string> = {
-        "错误": "❌ 错误",
-        "失败": "❌ 失败",
-        "成功": "✅ 成功",
-        "完成": "✅ 完成",
-        "警告": "⚠️ 警告",
-        "注意": "📌 注意",
-        "重要": "🔴 重要",
-        "建议": "💡 建议",
-        "步骤": "📋 步骤",
-        "示例": "📝 示例",
-        "总结": "📊 总结"
-    };
-
-    for (const [keyword, replacement] of Object.entries(emojiMap)) {
-        try {
-            // 使用词边界确保只匹配完整的单词，避免误匹配（如"错误信息"不会被匹配）
-            // 使用负向预查确保不会重复替换已带 emoji 的内容
-            const regex = new RegExp(f'(?<![❌✅⚠📌🔴💡📋📝📊])\b{keyword}\b(?!\w)', 'g');
-            if (regex.test(content)) {
-                content = content.replace(regex, replacement);
-            }
-        } catch (error) {
-            print(f'[message-formatter] emoji 替换失败: {keyword}')
-        }
-    }
-
-    // 3. 美化列表格式（确保 - 开头项有正确缩进）
-    const lines = content.split('\n');
-    const formattedLines: string[] = [];
-    let inList = false;
-
-    for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ')) {
-            if (!inList && formattedLines.length > 0 && formattedLines[formattedLines.length - 1] !== '') {
-                formattedLines.push(''); // 列表前加空行
-            }
-            inList = true;
-            formattedLines.push(`  ${trimmed}`);
+        if (channel === "wechat") {
+            console.log(`[message-formatter] 使用微信格式化（纯文本兼容）`);
+            content = processWeChatContent(content);
         } else {
-            inList = false;
-            formattedLines.push(line);
+            console.log(`[message-formatter] 使用 Markdown 格式化`);
+            content = processMarkdownContent(content);
         }
-    }
-    content = formattedLines.join('\n');
 
-    // 4. 确保代码块正确闭合
-    const codeBlockCount = (content.match(/```/g) || []).length;
-    if (codeBlockCount % 2 !== 0) {
-        content += '\n```';
-        console.log(`[message-formatter] 补全了未闭合的代码块`);
-    }
+        // ========== 代码检测和格式化 ==========
 
-    // 5. 长文本添加美观分隔线
-    if (content.length > 500 && !content.includes('---')) {
-        content = `---\n${content}\n---`;
-    }
+        content = detectAndFormatCode(content, channel);
 
-    // 6. 添加友好的签名（可选，仅在特定渠道）
-    if (channel === 'feishu' || channel === 'wechat') {
-        // 避免重复添加签名
-        if (!content.includes('🤖 OpenClaw')) {
-            content += `\n\n---\n🤖 *OpenClaw AI 助手* | 回复 /reset 开始新对话`;
-        }
-    }
+        // ========== 通用格式化逻辑 ==========
 
-    // ========== 应用格式化结果 ==========
+        // 1. 移除多余空行（保留最多2个连续换行）
+        content = content.replace(/\n{3,}/g, '\n\n');
 
-    // 修改消息内容（这是关键！）
-    event.context.content = content;
+        // 2. 添加表情符号标记
+        content = addEmojiMarkers(content);
 
-    // 可选：向会话中添加一条调试消息（用户不可见，仅开发者可见）
-    // event.messages.push(`[格式化完成] ${content.length} 字符`);
+        // 3. 美化列表格式
+        content = formatLists(content);
 
-    console.log(`[message-formatter] 格式化完成`);
-    console.log(`  格式化后长度: ${content.length}`);
-    console.log(`  增加字符数: ${content.length - (event.context?.originalLength || 0)}`);
+        // 4. 确保代码块正确闭合
+        content = ensureCodeBlocksClosed(content);
+
+        // 5. 长文本添加美观分隔线
+        content = addLongTextSeparator(content);
+
+        // 6. 添加友好的签名
+        content = addSignature(content, channel);
+
+        // ========== 应用格式化结果 ==========
+
+        // 修改消息内容（这是关键！）
+        event.context.content = content;
+
+        // 计算处理时间
+        const processingTime = Date.now() - startTime;
+
+        console.log(`[message-formatter] 格式化完成`);
+        console.log(`  格式化后长度: ${content.length}`);
+        console.log(`  增加字符数: ${content.length - originalLength}`);
+        console.log(`  处理时间: ${processingTime}ms`);
+
     } catch (error) {
+        const processingTime = Date.now() - startTime;
         console.error('[message-formatter] 处理失败:', error);
+        console.error(`  处理时间: ${processingTime}ms`);
         // 不抛出错误，避免影响消息发送
     }
 };
