@@ -5,9 +5,7 @@
   "scripts": {
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage",
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "test:coverage": "vitest --coverage"
   },
   "author": "徐自勉",
   "devDependencies": {
