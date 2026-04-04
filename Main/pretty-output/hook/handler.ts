@@ -127,7 +127,7 @@ export function isConfig(content: string): boolean {
     const configPatterns = [
         /^\s*\w+\s*:\s*\w+/m,
         /^\s*\w+\s*=\s*\w+/m,
-        /^\s*\[\w+\]/m,
+        /^\s*\[\w+]/m,
     ];
     return configPatterns.some(pattern => pattern.test(content));
 }
@@ -247,7 +247,7 @@ export function isValidChannel(channel: string): boolean {
 /**
  * 自动检测并格式化代码块
  */
-function detectAndFormatCode(content: string, channel: string): string {
+function detectAndFormatCode(content: string): string {
     if (isJSON(content)) {
         console.log('[message-formatter] Detected JSON, formatting');
         return formatJSON(content);
@@ -314,7 +314,7 @@ const messageFormatterHandler = async (event: any) => {
             content = processMarkdownContent(content);
         }
 
-        content = detectAndFormatCode(content, channel);
+        content = detectAndFormatCode(content);
         content = content.replace(/\n{3,}/g, '\n\n');
         content = addEmojiMarkers(content);
         content = formatLists(content);
